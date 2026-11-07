@@ -62,3 +62,22 @@ erDiagram
         int Choice_Level
         string Master_Program_Name
     }
+
+    %% Loaded Staging Tables (Disconnected from STAR Schema)
+    Applications {
+        string Academic_Year
+        float Admission_Rate
+        float Admission_Rate_Last_Year
+    }
+
+    "2022/2023" {
+        string Raw_CSV_Data
+    }
+
+    "2023/2024" {
+        string Raw_CSV_Data
+    }
+
+    "2024/2025" {
+        string Raw_CSV_Data
+    }
