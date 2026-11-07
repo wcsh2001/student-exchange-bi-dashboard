@@ -21,7 +21,9 @@ erDiagram
     Fact_Applications }o--|| Dim_Student : "Student ID"
     Fact_Applications }o--|| Dim_Host : "Host Institution"
     Fact_Applications }o--|| Dim_Academics : "Academic Key"
-    Dim_Student ||--o{ Bridge_Student_Programs : "Student ID"
+    
+    %% Bidirectional cross-filtering for bridge table
+    Dim_Student ||--o{ Bridge_Student_Programs : "Student ID (Cross-Filter: Both)"
 
     Fact_Applications {
         string Academic_Key FK
@@ -54,30 +56,10 @@ erDiagram
         string Program_1
         string Program_2
         string Program_3
-        string Program_of_Study_Combined
     }
 
     Bridge_Student_Programs {
         int Student_ID FK
         int Choice_Level
         string Master_Program_Name
-    }
-
-    %% Loaded Staging Tables (Disconnected from STAR Schema)
-    Applications {
-        string Academic_Year
-        float Admission_Rate
-        float Admission_Rate_Last_Year
-    }
-
-    "2022/2023" {
-        string Raw_CSV_Data
-    }
-
-    "2023/2024" {
-        string Raw_CSV_Data
-    }
-
-    "2024/2025" {
-        string Raw_CSV_Data
     }
