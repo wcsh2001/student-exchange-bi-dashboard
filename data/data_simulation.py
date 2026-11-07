@@ -90,39 +90,59 @@ def generate_exchange_data(year, num_records):
     
     student_profiles = {}
     for sid in student_ids:
+        # Guarantee 3 unique citizenships before applying sequential blanks
+        c1 = random.choices(populous_countries, weights=country_weights)[0]
+        c2 = c1
+        while c2 == c1:
+            c2 = random.choices(populous_countries, weights=country_weights)[0]
+        c3 = c1
+        while c3 in (c1, c2):
+            c3 = random.choices(populous_countries, weights=country_weights)[0]
+            
+        c1_final = simulate_blanks(c1, 0.02)
+        c2_final = simulate_blanks(c2, 0.75) if c1_final else None
+        c3_final = simulate_blanks(c3, 0.95) if c2_final else None
+
+        # Guarantee 3 unique programs before applying sequential blanks
+        p1, p2, p3 = random.sample(programs, 3)
+        p1_final = p1  # Original had no blank probability for Program 1
+        p2_final = simulate_blanks(p2, 0.60) if p1_final else None
+        p3_final = simulate_blanks(p3, 0.90) if p2_final else None
+
         student_profiles[sid] = {
-            "Citizenship 1": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.02),
-            "Citizenship 2": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.75), # High blank rate
-            "Citizenship 3": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.95), # Very high blank rate
+            "Citizenship 1": c1_final,
+            "Citizenship 2": c2_final,
+            "Citizenship 3": c3_final,
             "Disability": simulate_blanks(random.choices(["Yes", "No", "Prefer not to say"], weights=[0.05, 0.90, 0.05])[0], 0.10),
             "Gender": simulate_blanks(random.choices(["Female", "Male", "Non-binary", "Prefer not to say"], weights=[0.55, 0.40, 0.03, 0.02])[0], 0.05),
             "Indigenous Status": simulate_blanks(random.choices(["Yes", "No", "Prefer not to say"], weights=[0.02, 0.95, 0.03])[0], 0.15),
             "Legal Status in Canada": simulate_blanks(random.choices(["Citizen", "Permanent Resident", "International Student"], weights=[0.60, 0.15, 0.25])[0], 0.05),
             "Faculty": simulate_blanks(random.choice(faculties), 0.01),
             "College": simulate_blanks(random.choice(colleges), 0.08),
-            "Program 1": random.choice(programs), 
-            "Program 2": simulate_blanks(random.choice(programs), 0.60), 
-            "Program 3": simulate_blanks(random.choice(programs), 0.90)
+            "Program 1": p1_final, 
+            "Program 2": p2_final, 
+            "Program 3": p3_final
         }
 
     for _ in range(num_records):
         sid = random.choice(student_ids)
         profile = student_profiles[sid]
         
-        # Generate 3 host institution choices with increasing blank probabilities
-        h1 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.02)
-        h2 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.50)
-        h3 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.90)
+        # Guarantee 3 unique host institutions before applying sequential blanks
+        h1, h2, h3 = random.sample(list(host_institutions.keys()), 3)
+        h1_final = simulate_blanks(h1, 0.02)
+        h2_final = simulate_blanks(h2, 0.50) if h1_final else None
+        h3_final = simulate_blanks(h3, 0.90) if h2_final else None
 
         record = {
             "Academic Year": year,
             "Student ID": sid,
-            "Host Institution 1": h1,
-            "Country of Institution 1": host_institutions[h1] if h1 else None,
-            "Host Institution 2": h2,
-            "Country of Institution 2": host_institutions[h2] if h2 else None,
-            "Host Institution 3": h3,
-            "Country of Institution 3": host_institutions[h3] if h3 else None,
+            "Host Institution 1": h1_final,
+            "Country of Institution 1": host_institutions[h1_final] if h1_final else None,
+            "Host Institution 2": h2_final,
+            "Country of Institution 2": host_institutions[h2_final] if h2_final else None,
+            "Host Institution 3": h3_final,
+            "Country of Institution 3": host_institutions[h3_final] if h3_final else None,
             "Pathway": simulate_blanks(random.choice(pathways), 0.03),
             "Status": random.choices(statuses, weights=[0.4, 0.2, 0.3, 0.1])[0],
             "Citizenship 1": profile["Citizenship 1"],
