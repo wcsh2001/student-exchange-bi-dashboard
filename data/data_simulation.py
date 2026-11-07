@@ -65,6 +65,18 @@ programs = ["Computer Science", "Economics", "History", "Physics", "Data Science
 pathways = ["University-Wide", "Faculty-Specific", "Summer Research"]
 statuses = ["Admitted", "Nominated", "Not Admitted", "Withdrawn"]
 
+# Custom country weights to emphasize Canada (55%) and heavily populated nations
+populous_countries = [
+    "Canada", "China", "India", "United States", "Indonesia", "Pakistan", "Brazil", 
+    "Nigeria", "Bangladesh", "Russia", "Mexico", "Japan", "Ethiopia", "Philippines", 
+    "Egypt", "Vietnam", "DR Congo", "Turkey", "Iran", "Germany", "France", "United Kingdom"
+]
+country_weights = [
+    0.55, 0.08, 0.08, 0.05, 0.02, 0.02, 0.02, 
+    0.02, 0.02, 0.02, 0.02, 0.02, 0.01, 0.01, 
+    0.01, 0.01, 0.01, 0.01, 0.005, 0.005, 0.005, 0.005
+]
+
 def simulate_blanks(value, blank_probability=0.05):
     """Randomly returns None to simulate missing data."""
     if random.random() < blank_probability:
@@ -79,41 +91,43 @@ def generate_exchange_data(year, num_records):
     student_profiles = {}
     for sid in student_ids:
         student_profiles[sid] = {
-            "Citizenship": simulate_blanks(fake.country(), 0.02),
+            "Citizenship 1": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.02),
+            "Citizenship 2": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.75), # High blank rate
+            "Citizenship 3": simulate_blanks(random.choices(populous_countries, weights=country_weights)[0], 0.95), # Very high blank rate
             "Disability": simulate_blanks(random.choices(["Yes", "No", "Prefer not to say"], weights=[0.05, 0.90, 0.05])[0], 0.10),
             "Gender": simulate_blanks(random.choices(["Female", "Male", "Non-binary", "Prefer not to say"], weights=[0.55, 0.40, 0.03, 0.02])[0], 0.05),
             "Indigenous Status": simulate_blanks(random.choices(["Yes", "No", "Prefer not to say"], weights=[0.02, 0.95, 0.03])[0], 0.15),
             "Legal Status in Canada": simulate_blanks(random.choices(["Citizen", "Permanent Resident", "International Student"], weights=[0.60, 0.15, 0.25])[0], 0.05),
             "Faculty": simulate_blanks(random.choice(faculties), 0.01),
             "College": simulate_blanks(random.choice(colleges), 0.08),
-            "Program 1": random.choice(programs), # Assuming primary program is always required
-            "Program 2": simulate_blanks(random.choice(programs), 0.60), # High chance of blank (no second program)
-            "Program 3": simulate_blanks(random.choice(programs), 0.90), # Very high chance of blank
-            "Master Program Name": simulate_blanks(random.choice(["Honours Bachelor of Arts", "Honours Bachelor of Science", "Bachelor of Engineering", "Master of Information"]), 0.10)
+            "Program 1": random.choice(programs), 
+            "Program 2": simulate_blanks(random.choice(programs), 0.60), 
+            "Program 3": simulate_blanks(random.choice(programs), 0.90)
         }
 
     for _ in range(num_records):
         sid = random.choice(student_ids)
         profile = student_profiles[sid]
         
-        host_inst = random.choice(list(host_institutions.keys()))
-        host_country = host_institutions[host_inst]
-        
-        prog_combined = profile["Program 1"]
-        if profile["Program 2"]:
-            prog_combined += f", {profile['Program 2']}"
-        if profile["Program 3"]:
-            prog_combined += f", {profile['Program 3']}"
+        # Generate 3 host institution choices with increasing blank probabilities
+        h1 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.02)
+        h2 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.50)
+        h3 = simulate_blanks(random.choice(list(host_institutions.keys())), 0.90)
 
         record = {
             "Academic Year": year,
             "Student ID": sid,
-            "Host Institution": simulate_blanks(host_inst, 0.02),
-            "Host Institution Choice": simulate_blanks(random.choice([1, 2, 3]), 0.05),
+            "Host Institution 1": h1,
+            "Country of Institution 1": host_institutions[h1] if h1 else None,
+            "Host Institution 2": h2,
+            "Country of Institution 2": host_institutions[h2] if h2 else None,
+            "Host Institution 3": h3,
+            "Country of Institution 3": host_institutions[h3] if h3 else None,
             "Pathway": simulate_blanks(random.choice(pathways), 0.03),
-            "Status": random.choices(statuses, weights=[0.4, 0.2, 0.3, 0.1])[0], # Status usually required in BI
-            "Country of Institution": host_country,
-            "Citizenship": profile["Citizenship"],
+            "Status": random.choices(statuses, weights=[0.4, 0.2, 0.3, 0.1])[0],
+            "Citizenship 1": profile["Citizenship 1"],
+            "Citizenship 2": profile["Citizenship 2"],
+            "Citizenship 3": profile["Citizenship 3"],
             "Disability": profile["Disability"],
             "Gender": profile["Gender"],
             "Indigenous Status": profile["Indigenous Status"],
@@ -122,10 +136,7 @@ def generate_exchange_data(year, num_records):
             "College": profile["College"],
             "Program 1": profile["Program 1"],
             "Program 2": profile["Program 2"],
-            "Program 3": profile["Program 3"],
-            "Program of Study (Combined)": prog_combined,
-            "Master Program Name": profile["Master Program Name"],
-            "Choice Level": simulate_blanks(random.choice(["Primary", "Secondary", "Tertiary"]), 0.05)
+            "Program 3": profile["Program 3"]
         }
         data.append(record)
         
